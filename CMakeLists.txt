@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(PROJECT_NAME raytracing)
+set(PROJECT_NAME cha_engine)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
@@ -13,7 +13,7 @@ if (APPLE)
 endif()
 
 project(${PROJECT_NAME})
-add_executable(${PROJECT_NAME} src/main.cpp)
+add_executable(${PROJECT_NAME} src/main.cpp src/common.cpp src/Shader.cpp src/Shader.h src/Program.cpp src/Program.h src/Context.cpp src/Context.h src/Vertex_layout.cpp src/Vertex_layout.h src/Buffer.cpp src/Buffer.h src/Image.cpp src/Image.h src/Texture.cpp src/Texture.h)
 
 include(Dependency.cmake)
 
