@@ -2,9 +2,10 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
-#include "Context.h"
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+#include "Context.h"
+#include "common.h"
 
 
 void OnFramebufferSizeChange(GLFWwindow *window, int width, int height) {
@@ -51,6 +52,8 @@ void OnScroll(GLFWwindow* window, double xoffset, double yoffset) {
 }
 
 int main(int argc, const char **argv) {
+//    Logger::Init();
+//    CHA_CORE_WARN("Start program");
     // Logging start of program
     SPDLOG_INFO("Start program");
 

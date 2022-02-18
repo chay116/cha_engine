@@ -18,6 +18,9 @@ public:
 
     static ImageUPtr Create(int width, int height, int channelCount = 4);
 
+    static ImageUPtr CreateSingleColorImage(
+            int width, int height, const glm::vec4 &color);
+
     ~Image();
 
     const uint8_t *GetData() const { return m_data; }

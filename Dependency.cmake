@@ -19,7 +19,7 @@ ExternalProject_Add(
 )
 # Dependency 리스트 및 라이브러리 파일 리스트 추가
 set(DEP_LIST ${DEP_LIST} dep-spdlog)
-#set(DEP_LIBS ${DEP_LIBS} spdlog$<$<CONFIG:Debug>:d>)
+set(DEP_LIBS ${DEP_LIBS} spdlog)
 
 # glfw
 ExternalProject_Add(
@@ -71,7 +71,6 @@ ExternalProject_Add(
         ${DEP_INSTALL_DIR}/include/stb/stb_image.h
     )
 set(DEP_LIST ${DEP_LIST} dep_stb)
-#set(DEP_LIBS ${DEP_LIBS} stb)
 
 
 # glm
@@ -123,8 +122,8 @@ ExternalProject_Add(
     TEST_COMMAND ""
     )
 set(DEP_LIST ${DEP_LIST} dep_assimp)
-# set(DEP_LIBS ${DEP_LIBS}
-#    assimp-vc142-mt$<$<CONFIG:Debug>:d>
-#    zlibstatic$<$<CONFIG:Debug>:d>
-#    IrrXML$<$<CONFIG:Debug>:d>
-#    )
+set(DEP_LIBS ${DEP_LIBS}
+   assimp
+   zlibstatic
+   IrrXML
+   )
