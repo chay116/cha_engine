@@ -15,6 +15,7 @@ struct Vertex {
     glm::vec3 position;
     glm::vec3 normal;
     glm::vec2 texCoord;
+    glm::vec3 tangent;
 };
 
 CLASS_PTR(Material);
@@ -31,7 +32,7 @@ public:
 
     void SetToProgram(const Program* program) const;
 private:
-    Material() {}
+    Material() = default;
 };
 
 CLASS_PTR(Mesh);
@@ -43,24 +44,26 @@ public:
             const std::vector<uint32_t> &indices,
             uint32_t primitiveType);
 
-    void SetMaterial(MaterialSPtr material) { m_material = material; }
+    void SetMaterial(MaterialSPtr material) { m_material = std::move(material); }
 
-    MaterialSPtr GetMaterial() const { return m_material; }
+    [[nodiscard]] MaterialSPtr GetMaterial() const { return m_material; }
 
     static MeshUPtr CreateBox();
+    static MeshUPtr CreatePlane();
+    static MeshUPtr CreateSphere(uint32_t latiSegmentCount = 16, uint32_t longiSegmentCount = 32);
 
-    const VertexLayout *GetVertexLayout() const {
+    [[nodiscard]] const VertexLayout *GetVertexLayout() const {
         return m_vertexLayout.get();
     }
 
-    BufferSPtr GetVertexBuffer() const { return m_vertexBuffer; }
-
-    BufferSPtr GetIndexBuffer() const { return m_indexBuffer; }
+    [[nodiscard]] BufferSPtr GetVertexBuffer() const { return m_vertexBuffer; }
+    [[nodiscard]] BufferSPtr GetIndexBuffer() const { return m_indexBuffer; }
 
     void Draw(const Program* program) const;
+    void ComputeTangents(std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
 
 private:
-    Mesh() {}
+    Mesh() = default;
 
     void Init(
             const std::vector<Vertex> &vertices,

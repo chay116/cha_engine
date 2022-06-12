@@ -5,9 +5,9 @@
 #include "Image.h"
 #include <stb/stb_image.h>
 
-ImageUPtr Image::Load(const std::string& filepath) {
+ImageUPtr Image::Load(const std::string& filepath, bool flipVertical) {
     auto image = ImageUPtr(new Image());
-    if (!image->LoadWithStb(filepath))
+    if (!image->LoadWithStb(filepath, flipVertical))
         return nullptr;
     return std::move(image);
 }
@@ -18,9 +18,18 @@ Image::~Image() {
     }
 }
 
-bool Image::LoadWithStb(const std::string& filepath) {
-    stbi_set_flip_vertically_on_load(true);
-    m_data = stbi_load(filepath.c_str(), &m_width, &m_height, &m_channelCount, 0);
+
+bool Image::LoadWithStb(const std::string& filepath, bool flipVertical) {
+    stbi_set_flip_vertically_on_load(flipVertical);
+    auto ext = filepath.substr(filepath.find_last_of('.'));
+    if (ext == ".hdr" || ext == ".HDR") {
+        m_data = (uint8_t*)stbi_loadf(filepath.c_str(), &m_width, &m_height, &m_channelCount, 0);
+        m_bytePerChannel = 4;
+    }
+    else {
+        m_data = stbi_load(filepath.c_str(), &m_width, &m_height, &m_channelCount, 0);
+        m_bytePerChannel = 1;
+    }
     if (!m_data) {
         SPDLOG_ERROR("failed to load image: {}", filepath);
         return false;
@@ -28,18 +37,19 @@ bool Image::LoadWithStb(const std::string& filepath) {
     return true;
 }
 
-ImageUPtr Image::Create(int width, int height, int channelCount) {
+ImageUPtr Image::Create(int width, int height, int channelCount, int bytePerChannel) {
     auto image = ImageUPtr(new Image());
-    if (!image->Allocate(width, height, channelCount))
+    if (!image->Allocate(width, height, channelCount, bytePerChannel))
         return nullptr;
     return std::move(image);
 }
 
-bool Image::Allocate(int width, int height, int channelCount) {
+bool Image::Allocate(int width, int height, int channelCount, int bytePerChannel) {
     m_width = width;
     m_height = height;
     m_channelCount = channelCount;
-    m_data = (uint8_t*)malloc(m_width * m_height * m_channelCount);
+    m_bytePerChannel = bytePerChannel;
+    m_data = (uint8_t*)malloc(m_width * m_height * m_channelCount * m_bytePerChannel);
     return m_data ? true : false;
 }
 

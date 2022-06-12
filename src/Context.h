@@ -13,85 +13,72 @@
 #include "Vertex_layout.h"
 #include "Mesh.h"
 #include "Model.h"
+#include "Framebuffer.h"
+#include "Shadow_map.h"
 
 CLASS_PTR(Context)
 
 class Context {
 public:
     static ContextUPtr Create();
-
     void Render();
-
     void ProcessInput(GLFWwindow *window);
-
     void Reshape(int width, int height);
-
     void MouseMove(double x, double y);
-
     void MouseButton(int button, int action, double x, double y);
-
+    void DrawScene(const glm::mat4& view,
+                   const glm::mat4& projection,
+                   const Program* program);
 
 private:
-    Context() {}
-
+    Context() = default;
     bool Init();
 
-    ProgramUPtr m_program;
-    ProgramUPtr m_simpleProgram;
+    ProgramUPtr m_pbrProgram;
 
     MeshUPtr m_box;
-    ModelUPtr m_model;
-    TextureUPtr m_texture1;
-    TextureUPtr m_texture2;
-
-    // camera parameter
-    glm::vec3 m_cameraPos{glm::vec3(0.0f, 0.0f, 3.0f)};
-    glm::vec3 m_cameraFront{glm::vec3(0.0f, 0.0f, -1.0f)};
-    glm::vec3 m_cameraUp{glm::vec3(0.0f, 1.0f, 0.0f)};
-    bool m_cameraControl{false};
-    glm::vec2 m_prevMousePos{glm::vec2(0.0f)};
-    float m_cameraPitch{0.0f};
-    float m_cameraYaw{0.0f};
-    int m_width{WINDOW_WIDTH};
-    int m_height{WINDOW_HEIGHT};
-
-    // clear color
-    glm::vec4 m_clearColor{glm::vec4(0.1f, 0.2f, 0.3f, 0.0f)};
-
-    // animation
-    bool m_animation { true };
-    bool m_flashlight { true };
-
-    // light parameter
-    glm::vec3 m_lightPos{glm::vec3(3.0f, 3.0f, 3.0f)};
-    glm::vec3 m_lightColor{glm::vec3(1.0f, 1.0f, 1.0f)};
-    glm::vec3 m_objectColor{glm::vec3(1.0f, 0.5f, 0.0f)};
-    float m_ambientStrength{0.1f};
-    float m_specularStrength { 0.5f };
-    float m_specularShininess { 32.0f };
-
-    // light parameter
+    MeshUPtr m_plane;
+    MeshUPtr m_sphere;
     struct Light {
-        glm::vec3 position { glm::vec3(2.0f, 2.0f, 2.0f) };
-        glm::vec3 direction { glm::vec3(-1.0f, -1.0f, -1.0f) };
-        glm::vec2 cutoff { glm::vec2(20.0f, 5.0f) };
-        float distance { 32.0f };
-        glm::vec3 ambient { glm::vec3(0.1f, 0.1f, 0.1f) };
-        glm::vec3 diffuse { glm::vec3(0.5f, 0.5f, 0.5f) };
-        glm::vec3 specular { glm::vec3(1.0f, 1.0f, 1.0f) };
+        glm::vec3 position { glm::vec3(0.0f, 0.0f, 0.0f) };
+        glm::vec3 color { glm::vec3(1.0f, 1.0f, 1.0f) };
     };
-    Light m_light;
+    std::vector<Light> m_lights;
+    bool m_useIBL { true };
 
-    // material parameter
     struct Material {
-        TextureUPtr diffuse;
-        TextureUPtr specular;
-//        glm::vec3 ambient { glm::vec3(1.0f, 0.5f, 0.3f) };
-//        glm::vec3 diffuse { glm::vec3(1.0f, 0.5f, 0.3f) };
-//        glm::vec3 specular { glm::vec3(0.5f, 0.5f, 0.5f) };
-        float shininess { 32.0f };
+        glm::vec3 albedo { glm::vec3(1.0f, 1.0f, 1.0f) };
+        float roughness { 0.5f };
+        float metallic { 0.5f };
+        float ao { 0.1f };
     };
     Material m_material;
+
+
+    TextureUPtr m_hdrMap;
+    ProgramUPtr m_sphericalMapProgram;
+    CubeTextureSPtr m_hdrCubeMap;
+    ProgramUPtr m_skyboxProgram;
+    CubeTextureSPtr m_diffuseIrradianceMap;
+    ProgramUPtr m_diffuseIrradianceProgram;
+    CubeTextureSPtr m_preFilteredMap;
+    ProgramUPtr m_preFilteredProgram;
+    TextureSPtr m_brdfLookupMap;
+    ProgramUPtr m_brdfLookupProgram;
+
+    // screen size
+    int m_width {640};
+    int m_height {480};
+
+    // camera parameter
+    bool m_cameraControl { false };
+    glm::vec2 m_prevMousePos { glm::vec2(0.0f) };
+    float m_cameraPitch { 0.0f };
+    float m_cameraYaw { 0.0f };
+    glm::vec3 m_cameraFront { glm::vec3(0.0f, -1.0f, 0.0f) };
+    glm::vec3 m_cameraPos { glm::vec3(0.0f, 0.0f, 8.0f) };
+    glm::vec3 m_cameraUp { glm::vec3(0.0f, 1.0f, 0.0f) };
+
 };
 
 #endif //CHA_ENGINE_CONTEXT_H

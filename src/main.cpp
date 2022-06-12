@@ -5,7 +5,6 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include "Context.h"
-#include "common.h"
 
 
 void OnFramebufferSizeChange(GLFWwindow *window, int width, int height) {
@@ -74,7 +73,7 @@ int main(int argc, const char **argv) {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     // Allow Forward Compatibility
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-
+    glfwWindowHint(GLFW_SAMPLES, 4);
     // Create GLFW window
     SPDLOG_INFO("Create glfw window");
     GLFWwindow *window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_NAME, nullptr, nullptr);
