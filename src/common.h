@@ -11,6 +11,14 @@
 #include <memory>
 #include <spdlog/spdlog.h>
 
+#ifndef M_PI
+const double M_PI = 3.1415926535897932384626433832795;
+#endif
+
+#ifndef M_EPSION
+const float M_EPSION = 0.0000001f;
+#endif
+
 #define CLASS_PTR(klassName) \
 class klassName; \
 using klassName ## UPtr = std::unique_ptr<klassName>; \

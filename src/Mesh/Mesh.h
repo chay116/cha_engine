@@ -5,11 +5,11 @@
 #ifndef CHA_ENGINE_MESH_H
 #define CHA_ENGINE_MESH_H
 
-#include "common.h"
-#include "Buffer.h"
-#include "Vertex_layout.h"
-#include "Texture.h"
-#include "Program.h"
+#include "../common.h"
+#include "../Buffer.h"
+#include "../Vertex_layout.h"
+#include "../Texture.h"
+#include "../Program.h"
 
 struct Vertex {
     glm::vec3 position;
@@ -50,26 +50,25 @@ public:
 
     static MeshUPtr CreateBox();
     static MeshUPtr CreatePlane();
-    static MeshUPtr CreateSphere(uint32_t latiSegmentCount = 16, uint32_t longiSegmentCount = 32);
+    static MeshUPtr CreateSphere(float radius = 1.0f, uint32_t latiSegmentCount = 16, uint32_t longiSegmentCount = 32);
 
     [[nodiscard]] const VertexLayout *GetVertexLayout() const {
         return m_vertexLayout.get();
     }
-
     [[nodiscard]] BufferSPtr GetVertexBuffer() const { return m_vertexBuffer; }
     [[nodiscard]] BufferSPtr GetIndexBuffer() const { return m_indexBuffer; }
 
     void Draw(const Program* program) const;
-    void ComputeTangents(std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
+    void ComputeTangents(std::vector<Vertex>& m_vertices, const std::vector<uint32_t>& indices);
+    ~Mesh() = default;
 
 private:
+    void Init(const std::vector<Vertex> &vertices,
+              const std::vector<uint32_t> &indices,
+              uint32_t primitiveType);
+
+//protected:
     Mesh() = default;
-
-    void Init(
-            const std::vector<Vertex> &vertices,
-            const std::vector<uint32_t> &indices,
-            uint32_t primitiveType);
-
     uint32_t m_primitiveType{GL_TRIANGLES};
     VertexLayoutUPtr m_vertexLayout;
     BufferSPtr m_vertexBuffer;

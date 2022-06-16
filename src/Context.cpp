@@ -5,6 +5,13 @@
 #include "Context.h"
 #include <imgui.h>
 
+int maxFrames = 240;
+int maxSubstep = 10;
+float FPS = 24.0f;
+float timeStep = 1.0f / (FPS*maxSubstep); //1.0/240f;
+int solverIteration = 10;
+float dampingRate = 0.9f;
+
 ContextUPtr Context::Create() {
     auto context = ContextUPtr(new Context());
     if (!context->Init())
@@ -86,13 +93,19 @@ void Context::Render() {
             ImGui::DragFloat3("light.pos", glm::value_ptr(m_lights[lightIndex].position), 0.01f);
             ImGui::DragFloat3("light.color", glm::value_ptr(m_lights[lightIndex].color), 0.1f);
         }
-        if (ImGui::CollapsingHeader("material")) {
-            ImGui::ColorEdit3("mat.albedo", glm::value_ptr(m_material.albedo));
-            ImGui::SliderFloat("mat.roughness", &m_material.roughness, 0.0f, 1.0f);
-            ImGui::SliderFloat("mat.metallic", &m_material.metallic, 0.0f, 1.0f);
-            ImGui::SliderFloat("mat.ao", &m_material.ao, 0.0f, 1.0f);
+        if (ImGui::CollapsingHeader("sphere")) {
+            ImGui::ColorEdit3("sphere.albedo", glm::value_ptr(m_sphereMaterial.albedo));
+            ImGui::SliderFloat("sphere.roughness", &m_sphereMaterial.roughness, 0.0f, 1.0f);
+            ImGui::SliderFloat("sphere.metallic", &m_sphereMaterial.metallic, 0.0f, 1.0f);
+            ImGui::SliderFloat("sphere.ao", &m_sphereMaterial.ao, 0.0f, 1.0f);
+            ImGui::Checkbox("use IBL", &m_sphereMaterial.useIBL);
         }
-        ImGui::Checkbox("use IBL", &m_useIBL);
+        if (ImGui::CollapsingHeader("cloth")) {
+            ImGui::ColorEdit3("cloth.albedo", glm::value_ptr(m_clothMaterial.albedo));
+            ImGui::SliderFloat("cloth.roughness", &m_clothMaterial.roughness, 0.0f, 1.0f);
+            ImGui::SliderFloat("cloth.metallic", &m_clothMaterial.metallic, 0.0f, 1.0f);
+            ImGui::SliderFloat("cloth.ao", &m_clothMaterial.ao, 0.0f, 1.0f);
+        }
     }
     ImGui::End();
 
@@ -111,11 +124,15 @@ void Context::Render() {
             m_cameraUp);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // pbr sphere rendinerg
     m_pbrProgram->Use();
     m_pbrProgram->SetUniform("viewPos", m_cameraPos);
-    m_pbrProgram->SetUniform("material.ao", m_material.ao);
-    m_pbrProgram->SetUniform("material.albedo", m_material.albedo);
-    m_pbrProgram->SetUniform("useIBL", m_useIBL ? 1 : 0);
+    m_pbrProgram->SetUniform("material.ao", m_sphereMaterial.ao);
+    m_pbrProgram->SetUniform("material.albedo", m_sphereMaterial.albedo);
+    m_pbrProgram->SetUniform("material.roughness", m_sphereMaterial.roughness);
+    m_pbrProgram->SetUniform("material.metallic", m_sphereMaterial.metallic);
+    m_pbrProgram->SetUniform("useIBL", m_sphereMaterial.useIBL ? 1 : 0);
     m_pbrProgram->SetUniform("irradianceMap", 0);
     m_pbrProgram->SetUniform("preFilteredMap", 1);
     m_pbrProgram->SetUniform("brdfLookupTable", 2);
@@ -126,14 +143,48 @@ void Context::Render() {
     glActiveTexture(GL_TEXTURE2);
     m_brdfLookupMap->Bind();
     glActiveTexture(GL_TEXTURE0);
+    auto modelTransform =
+            glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+    auto transform = projection * view * modelTransform;
+    m_simplePbrProgram->SetUniform("transform", transform);
+    m_simplePbrProgram->SetUniform("modelTransform", modelTransform);
     for (size_t i = 0; i < m_lights.size(); i++) {
         auto posName = fmt::format("lights[{}].position", i);
         auto colorName = fmt::format("lights[{}].color", i);
         m_pbrProgram->SetUniform(posName, m_lights[i].position);
         m_pbrProgram->SetUniform(colorName, m_lights[i].color);
     }
-    DrawScene(view, projection, m_pbrProgram.get());
+    m_sphere->Draw(m_pbrProgram.get());
 
+
+    // update cloth state; Physics simulation using fixed deltatime;
+    float currentFrame = glfwGetTime();
+    deltaTime = currentFrame - lastFrame;
+    lastFrame = currentFrame;
+
+    // cloth rendering
+//    m_cloth->Update(timeStep, dampingRate, hasPosConstraint, solverIteration, spherePos, sphereRadius);
+    m_cloth->Update(timeStep, dampingRate, false, solverIteration, {0, 0, 0}, 4.0f);
+    m_simplePbrProgram->Use();
+    m_simplePbrProgram->SetUniform("viewPos", m_cameraPos);
+    m_simplePbrProgram->SetUniform("material.ao", m_clothMaterial.ao);
+    m_simplePbrProgram->SetUniform("material.albedo", m_clothMaterial.albedo);
+    m_simplePbrProgram->SetUniform("material.roughness", m_clothMaterial.roughness);
+    m_simplePbrProgram->SetUniform("material.metallic", m_clothMaterial.metallic);
+    modelTransform =
+            glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+    transform = projection * view * modelTransform;
+    m_simplePbrProgram->SetUniform("transform", transform);
+    m_simplePbrProgram->SetUniform("modelTransform", modelTransform);
+    for (size_t i = 0; i < m_lights.size(); i++) {
+        auto posName = fmt::format("lights[{}].position", i);
+        auto colorName = fmt::format("lights[{}].color", i);
+        m_simplePbrProgram->SetUniform(posName, m_lights[i].position);
+        m_simplePbrProgram->SetUniform(colorName, m_lights[i].color);
+    }
+    m_cloth->Draw(m_simplePbrProgram.get());
+
+    // skybox rendering
     glDepthFunc(GL_LEQUAL);
     m_skyboxProgram->Use();
     m_skyboxProgram->SetUniform("projection", projection);
@@ -142,7 +193,7 @@ void Context::Render() {
     m_hdrCubeMap->Bind();
     m_box->Draw(m_skyboxProgram.get());
     glDepthFunc(GL_LESS);
-}
+};
 
 bool Context::Init() {
     glEnable(GL_MULTISAMPLE);
@@ -152,10 +203,14 @@ bool Context::Init() {
 
     m_box = Mesh::CreateBox();
     m_plane = Mesh::CreatePlane();
-    m_sphere = Mesh::CreateSphere();
+    m_sphere = Mesh::CreateSphere(4.0f);
+    m_cloth = Cloth::Create();
 
     m_pbrProgram = Program::Create("../assets/shaders/pbr_vs.glsl",
                                    "../assets/shaders/pbr_fs.glsl");
+    m_simplePbrProgram = Program::Create("../assets/shaders/pbr_vs.glsl",
+                                   "../assets/shaders/pbr_simple_fs.glsl");
+
 
     m_lights.push_back({glm::vec3(5.0f, 5.0f, 6.0f),
                         glm::vec3(40.0f, 40.0f, 40.0f)});
@@ -268,25 +323,25 @@ bool Context::Init() {
     return true;
 }
 
-void Context::DrawScene(const glm::mat4& view,
-                        const glm::mat4& projection,
-                        const Program* program) {
-    program->Use();
-
-    const int sphereCount = 7;
-    const float offset = 1.2f;
-    for (int j = 0; j < sphereCount; j++) {
-        float y = ((float)j - (float)(sphereCount - 1) * 0.5f) * offset;
-        for (int i = 0; i < sphereCount; i++) {
-            float x = ((float)i - (float)(sphereCount - 1) * 0.5f) * offset;
-            auto modelTransform =
-                    glm::translate(glm::mat4(1.0f), glm::vec3(x, y, 0.0f));
-            auto transform = projection * view * modelTransform;
-            program->SetUniform("transform", transform);
-            program->SetUniform("modelTransform", modelTransform);
-            program->SetUniform("material.roughness", (float)(i + 1) / (float)sphereCount);
-            program->SetUniform("material.metallic", (float)(j + 1) / (float)sphereCount);
-            m_sphere->Draw(program);
-        }
-    }
-}
+//void Context::DrawSphere(const glm::mat4& view,
+//                         const glm::mat4& projection,
+//                         const Program* program) {
+//    program->Use();
+//
+//    const int sphereCount = 7;
+//    const float offset = 1.2f;
+//    for (int j = 0; j < sphereCount; j++) {
+//        float y = ((float)j - (float)(sphereCount - 1) * 0.5f) * offset;
+//        for (int i = 0; i < sphereCount; i++) {
+//            float x = ((float)i - (float)(sphereCount - 1) * 0.5f) * offset;
+//            auto modelTransform =
+//                    glm::translate(glm::mat4(1.0f), glm::vec3(x, y, 0.0f));
+//            auto transform = projection * view * modelTransform;
+//            program->SetUniform("transform", transform);
+//            program->SetUniform("modelTransform", modelTransform);
+//            program->SetUniform("material.roughness", (float)(i + 1) / (float)sphereCount);
+//            program->SetUniform("material.metallic", (float)(j + 1) / (float)sphereCount);
+//            m_sphere->Draw(program);
+//        }
+//    }
+//}

@@ -6,7 +6,7 @@
 #define CHA_ENGINE_MODEL_H
 
 #include "common.h"
-#include "Mesh.h"
+#include "Mesh/Mesh.h"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>

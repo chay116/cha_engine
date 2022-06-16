@@ -17,13 +17,11 @@ public:
 
     ~Buffer();
 
-    uint32_t Get() const { return m_buffer; }
-
-    size_t GetStride() const { return m_stride; }
-
-    size_t GetCount() const { return m_count; }
-
+    [[nodiscard]] uint32_t Get() const { return m_buffer; }
+    [[nodiscard]] size_t GetStride() const { return m_stride; }
+    [[nodiscard]] size_t GetCount() const { return m_count; }
     void Bind() const;
+    void Update(const void* data) const;
 
 private:
     Buffer() {}

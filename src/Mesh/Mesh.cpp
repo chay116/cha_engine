@@ -34,9 +34,9 @@ void Mesh::Init(
 
 void Mesh::Draw(const Program* program) const {
     m_vertexLayout->Bind();
-    if (m_material) {
-        m_material->SetToProgram(program);
-    }
+//    if (m_material) {
+//        m_material->SetToProgram(program);
+//    }
     glDrawElements(m_primitiveType, m_indexBuffer->GetCount(), GL_UNSIGNED_INT, 0);
 }
 
@@ -100,7 +100,7 @@ MeshUPtr Mesh::CreatePlane() {
     return Create(vertices, indices, GL_TRIANGLES);
 }
 
-MeshUPtr Mesh::CreateSphere(uint32_t latiSegmentCount, uint32_t longiSegmentCount) {
+MeshUPtr Mesh::CreateSphere(float radius, uint32_t latiSegmentCount, uint32_t longiSegmentCount) {
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
 
@@ -119,7 +119,7 @@ MeshUPtr Mesh::CreateSphere(uint32_t latiSegmentCount, uint32_t longiSegmentCoun
             auto point = glm::vec3(cosPhi * cosTheta, sinPhi, -cosPhi * sinTheta);
 
             vertices[i * circleVertCount + j] = Vertex {
-                    point * 0.5f, point, glm::vec2(u, v), glm::vec3(0.0f, 0.0f, 0.0f)
+                    point * radius, point, glm::vec2(u, v), glm::vec3(0.0f, 0.0f, 0.0f)
             };
         }
     }
@@ -159,7 +159,7 @@ void Material::SetToProgram(const Program* program) const {
     program->SetUniform("material.shininess", shininess);
 }
 
-void Mesh::ComputeTangents(std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices) {
+void Mesh::ComputeTangents(std::vector<Vertex>& m_vertices, const std::vector<uint32_t>& indices) {
 
     auto compute = [](const glm::vec3& pos1, const glm::vec3& pos2, const glm::vec3& pos3,
                       const glm::vec2& uv1, const glm::vec2& uv2, const glm::vec2& uv3) -> glm::vec3 {
@@ -181,8 +181,8 @@ void Mesh::ComputeTangents(std::vector<Vertex>& vertices, const std::vector<uint
     // initialize
     std::vector<glm::vec3> tangents;
     std::vector<float> weights;
-    tangents.resize(vertices.size());
-    weights.resize(vertices.size());
+    tangents.resize(m_vertices.size());
+    weights.resize(m_vertices.size());
     memset(tangents.data(), 0, tangents.size() * sizeof(glm::vec3));
     memset(weights.data(), 0, weights.size() * sizeof(float));
 
@@ -193,23 +193,28 @@ void Mesh::ComputeTangents(std::vector<Vertex>& vertices, const std::vector<uint
         auto v3 = indices[i+2];
 
         tangents[v1] += compute(
-                vertices[v1].position, vertices[v2].position, vertices[v3].position,
-                vertices[v1].texCoord, vertices[v2].texCoord, vertices[v3].texCoord);
+                m_vertices[v1].position, m_vertices[v2].position, m_vertices[v3].position,
+                m_vertices[v1].texCoord, m_vertices[v2].texCoord, m_vertices[v3].texCoord);
         weights[v1] += 1.0f;
 
         tangents[v2] = compute(
-                vertices[v2].position, vertices[v3].position, vertices[v1].position,
-                vertices[v2].texCoord, vertices[v3].texCoord, vertices[v1].texCoord);
+                m_vertices[v2].position, m_vertices[v3].position, m_vertices[v1].position,
+                m_vertices[v2].texCoord, m_vertices[v3].texCoord, m_vertices[v1].texCoord);
         weights[v2] += 1.0f;
 
         tangents[v3] = compute(
-                vertices[v3].position, vertices[v1].position, vertices[v2].position,
-                vertices[v3].texCoord, vertices[v1].texCoord, vertices[v2].texCoord);
+                m_vertices[v3].position, m_vertices[v1].position, m_vertices[v2].position,
+                m_vertices[v3].texCoord, m_vertices[v1].texCoord, m_vertices[v2].texCoord);
         weights[v3] += 1.0f;
     }
 
     // normalize
-    for (size_t i = 0; i < vertices.size(); i++) {
-        vertices[i].tangent = glm::normalize(tangents[i]);
+    for (size_t i = 0; i < m_vertices.size(); i++) {
+        m_vertices[i].tangent = glm::normalize(tangents[i]);
     }
 }
+
+
+
+
+

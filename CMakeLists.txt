@@ -14,7 +14,7 @@ endif()
 
 project(${PROJECT_NAME})
 add_executable(${PROJECT_NAME} src/main.cpp src/common.cpp src/Shader.cpp src/Shader.h src/Program.cpp src/Program.h src/Context.cpp src/Context.h src/Vertex_layout.cpp src/Vertex_layout.h
-		src/Buffer.cpp src/Buffer.h src/Image.cpp src/Image.h src/Texture.cpp src/Texture.h src/Mesh.cpp src/Mesh.h src/Model.cpp src/Model.h src/Framebuffer.cpp src/Framebuffer.h src/Shadow_map.cpp src/Shadow_map.h)
+		src/Buffer.cpp src/Buffer.h src/Image.cpp src/Image.h src/Texture.cpp src/Texture.h src/Mesh/Mesh.cpp src/Mesh/Mesh.h src/Model.cpp src/Model.h src/Framebuffer.cpp src/Framebuffer.h src/Shadow_map.cpp src/Shadow_map.h src/Mesh/Cloth.cpp src/Mesh/Cloth.h)
 
 include(Dependency.cmake)
 

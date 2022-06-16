@@ -11,12 +11,13 @@
 #include "Buffer.h"
 #include "Texture.h"
 #include "Vertex_layout.h"
-#include "Mesh.h"
+#include "Mesh/Cloth.h"
 #include "Model.h"
 #include "Framebuffer.h"
 #include "Shadow_map.h"
 
 CLASS_PTR(Context)
+
 
 class Context {
 public:
@@ -26,33 +27,40 @@ public:
     void Reshape(int width, int height);
     void MouseMove(double x, double y);
     void MouseButton(int button, int action, double x, double y);
-    void DrawScene(const glm::mat4& view,
-                   const glm::mat4& projection,
-                   const Program* program);
+    void DrawSphere(const glm::mat4& view,
+                    const glm::mat4& projection,
+                    const Program* program);
 
 private:
     Context() = default;
     bool Init();
 
+    float deltaTime = 0.0f;
+    float lastFrame = 0.0f;
+
     ProgramUPtr m_pbrProgram;
+    ProgramUPtr m_simplePbrProgram;
 
     MeshUPtr m_box;
     MeshUPtr m_plane;
     MeshUPtr m_sphere;
+    ClothUPtr m_cloth;
     struct Light {
         glm::vec3 position { glm::vec3(0.0f, 0.0f, 0.0f) };
         glm::vec3 color { glm::vec3(1.0f, 1.0f, 1.0f) };
     };
     std::vector<Light> m_lights;
-    bool m_useIBL { true };
+
 
     struct Material {
         glm::vec3 albedo { glm::vec3(1.0f, 1.0f, 1.0f) };
         float roughness { 0.5f };
         float metallic { 0.5f };
         float ao { 0.1f };
+        bool useIBL { false };
     };
-    Material m_material;
+    Material m_sphereMaterial;
+    Material m_clothMaterial;
 
 
     TextureUPtr m_hdrMap;

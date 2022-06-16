@@ -1,7 +1,7 @@
 #version 330 core
-in vec3 fragPos;
+in vec3 normal;
 in vec2 texCoord;
-in mat3 TBN;
+in vec3 fragPos;
 
 out vec4 fragColor;
 
@@ -15,10 +15,9 @@ const int LIGHT_COUNT = 4;
 uniform Light lights[LIGHT_COUNT];
 
 struct Material {
-    sampler2D albedo;
-    sampler2D metallic;
-    sampler2D roughness;
-    sampler2D normal;
+    vec3 albedo;
+    float metallic;
+    float roughness;
     float ao;
 };
 uniform Material material;
@@ -58,12 +57,11 @@ vec3 FresnelSchlick(float cosTheta, vec3 F0) {
 }
 
 void main() {
-    vec3 albedo = pow(texture(material.albedo, texCoord).rgb, vec3(2.2));
-    float metallic = texture(material.metallic, texCoord).r;
-    float roughness = texture(material.roughness, texCoord).r;
+    vec3 albedo = material.albedo;
+    float metallic = material.metallic;
+    float roughness = material.roughness;
     float ao = material.ao;
-    vec3 fragNormal = texture(material.normal, texCoord).rgb * 2.0 - 1.0;
-    fragNormal = TBN * fragNormal;
+    vec3 fragNormal = normalize(normal);
     vec3 viewDir = normalize(viewPos - fragPos);
     float dotNV = max(dot(fragNormal, viewDir), 0.0);
 

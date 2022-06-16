@@ -19,6 +19,11 @@ Buffer::~Buffer() {
     }
 }
 
+void Buffer::Update(const void* data) const {
+    Bind();
+    glBufferData(m_bufferType, m_stride * m_count, data, m_usage);
+};
+
 void Buffer::Bind() const {
     glBindBuffer(m_bufferType, m_buffer);
 }
