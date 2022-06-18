@@ -20,7 +20,7 @@ ContextUPtr Context::Create() {
 }
 
 void Context::ProcessInput(GLFWwindow *window) {
-    const float cameraSpeed = 0.05f;
+    const float cameraSpeed = 0.2f;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         m_cameraPos += cameraSpeed * m_cameraFront;
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -164,7 +164,7 @@ void Context::Render() {
 
     // cloth rendering
 //    m_cloth->Update(timeStep, dampingRate, hasPosConstraint, solverIteration, spherePos, sphereRadius);
-    m_cloth->Update(timeStep, dampingRate, false, solverIteration, {0, 0, 0}, 4.0f);
+    m_cloth->Update(timeStep, dampingRate, false, solverIteration, {0, 0, 0}, 2.0f);
     m_simplePbrProgram->Use();
     m_simplePbrProgram->SetUniform("viewPos", m_cameraPos);
     m_simplePbrProgram->SetUniform("material.ao", m_clothMaterial.ao);
@@ -193,6 +193,7 @@ void Context::Render() {
     m_hdrCubeMap->Bind();
     m_box->Draw(m_skyboxProgram.get());
     glDepthFunc(GL_LESS);
+
 };
 
 bool Context::Init() {
@@ -203,7 +204,7 @@ bool Context::Init() {
 
     m_box = Mesh::CreateBox();
     m_plane = Mesh::CreatePlane();
-    m_sphere = Mesh::CreateSphere(4.0f);
+    m_sphere = Mesh::CreateSphere(2.0f);
     m_cloth = Cloth::Create();
 
     m_pbrProgram = Program::Create("../assets/shaders/pbr_vs.glsl",

@@ -13,15 +13,15 @@ struct Point
     glm::vec3 predPos;  // predicted position stored here in update process
     glm::vec3 vel; // velocity of the point
     glm::vec3 accel; // acceleration of the point
-    float mass;
+    float invMass;
 };
 
 CLASS_PTR(Cloth);
 class Cloth {
 public:
     static ClothUPtr Create(
-            uint32_t resX = 51, uint32_t resY = 51, float sizeX = 0.5, float sizeY = 0.5, float k_stiff = 1,
-            bool hasPosConstr = true, glm::vec3 initPos = glm::vec3(-10.0f, 10.0f, -20.0f));
+            uint32_t resX = 51, uint32_t resY = 51, float sizeX = 0.2, float sizeY = 0.2, float k_stiff = 1,
+            bool hasPosConstr = false, glm::vec3 initPos = glm::vec3(-5.0f, 5.0f, -5.0f));
     ~Cloth() = default;
     void Update(float deltaTime, float dampingRate, bool hasPosConstr,
                 int solverIter, glm::vec3 sphereCenter, float sphereRadius);

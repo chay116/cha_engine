@@ -67,7 +67,7 @@ void Cloth::InitVertexArray() {
         {
             glm::vec3 newPos = glm::vec3((float)i * m_sizeX, 0.0f, (float)j * m_sizeY);
             newPos += m_initPos;
-            float newMass = 0.5f;
+            float invNewMass = 2.0f;
 
             // initialize point constraint
             Point newP;
@@ -79,15 +79,16 @@ void Cloth::InitVertexArray() {
                     newPos, glm::vec3(0.0f, 0.0f, 1.0f),
                     glm::vec2(i / m_resX, j / m_resY), glm::vec3(0.0f, 0.0f, 0.0f)
             };
+
             if (m_hasPosConstr && (j == m_resY - 1 && (i == 0 || i == m_resX - 1)))  // fix two m_points
             {
-                newP.mass = INFINITY;
+                newP.invMass = 0;
                 m_points.push_back(newP);
                 m_posConstraintList.push_back(newPos);
             }
             else
             {
-                newP.mass = newMass;
+                newP.invMass = invNewMass;
                 m_points.push_back(newP);
             }
 
@@ -140,59 +141,52 @@ void Cloth::Draw(const Program* program) const {
 
 void Cloth::Update(float deltaTime, float dampingRate, bool hasPosConstr, int solverIter, glm::vec3 sphereCenter, float sphereRadius)
 {
-//     printf("updating... %f\n", deltaTime);
+     printf("updating... %f\n", deltaTime);
     // external forces (gravity ONLY)
     // --------------------------------
     glm::vec3 gravity = glm::vec3(0, -9.8f, 0);
+    auto gravity_force = deltaTime * this->m_points[0].invMass * gravity;
+    // COARSE: damping velocities
+    auto damping_velocity = pow((1 - dampingRate), deltaTime);
     for (int i = 0; i < this->m_points.size(); ++i)
     {
-        if (this->m_points[i].mass != 0) // should always be true
+        if (!(i == m_resX * (m_resY - 1) || i == (m_resX * m_resY) - 1))  // do not conserve external forces
         {
-            if (!(i == m_resX * (m_resY - 1) || i == (m_resX * m_resY) - 1))  // do not conserve external forces
-            {
-                float invMass = 1 / this->m_points[i].mass;
-                this->m_points[i].vel += deltaTime * invMass * gravity;
-                // COARSE: damping velocities
-                this->m_points[i].vel *= pow((1 - dampingRate), deltaTime);
-            }
-
-            // add the predicted position with velocities
-            this->m_points[i].predPos = this->m_points[i].pos + deltaTime * this->m_points[i].vel;
+            this->m_points[i].vel += gravity_force;
+            this->m_points[i].vel *= damping_velocity;
         }
+        // add the predicted position with velocities
+        this->m_points[i].predPos = this->m_points[i].pos + deltaTime * this->m_points[i].vel;
     }
 
     // project constraints (ONLY distance contraints and position contraints for now)
     // ---------------------------------
+    sphereRadius = sphereRadius * 1.03f;
     for (int iter = 0; iter < solverIter; iter++)
     {
         // distance contraint
         for (int i = 0; i < m_distConstraintList.size(); ++i)
         {
             glm::vec2 currDistConstr = m_distConstraintList[i]; // point-pair
-            float currRestLength = m_restLength[i];
             Point pt1 = m_points[currDistConstr[0]];
             Point pt2 = m_points[currDistConstr[1]];
-            glm::vec3 p1 = pt1.predPos;
-            glm::vec3 p2 = pt2.predPos;
 
-            glm::vec3 vecP2P1 = p1 - p2;
+            glm::vec3 vecP2P1 = pt1.predPos - pt2.predPos;
             float magP2P1 = mag(vecP2P1);
             if (magP2P1 <= M_EPSION)
                 return;
-            float w1 = 1 / pt1.mass;
-            float w2 = 1 / pt2.mass;
-            float invMass = w1 + w2;
+            float invMass = pt1.invMass + pt2.invMass;
             if (invMass <= M_EPSION)
                 return;
 
             glm::vec3 n_val = vecP2P1 / magP2P1;  // direction
-            float s_val = (magP2P1 - currRestLength) * (1 / invMass);  // scaler
+            float s_val = (magP2P1 - m_restLength[i]) * (1 / invMass);  // scaler
 
             glm::vec3 distProj = s_val * n_val * m_k_stiff;
-            if (w1 > 0.0) // should always be true
-                m_points[currDistConstr[0]].predPos -= (distProj * w1);
-            if (w2 > 0.0) // should always be true
-                m_points[currDistConstr[1]].predPos += (distProj * w2);
+            if (pt1.invMass > 0.0) // should always be true
+                m_points[currDistConstr[0]].predPos -= (distProj * pt1.invMass);
+            if (pt2.invMass > 0.0) // should always be true
+                m_points[currDistConstr[1]].predPos += (distProj * pt2.invMass);
         }
         // position constraint
         if (hasPosConstr)
@@ -218,14 +212,7 @@ void Cloth::Update(float deltaTime, float dampingRate, bool hasPosConstr, int so
     {
         // commit velocity based on position changes
         this->m_points[i].vel = (m_points[i].predPos - m_points[i].pos) / deltaTime;
-        // printf("vel is %f\n", m_points[i].vel);
-        // commit position
         this->m_points[i].pos = m_points[i].predPos;
         m_vertices[i].position = m_points[i].pos;
-        /*if (i == 95)
-            printf("predPos x: %f, y: %f; currPos x: %f, y: %f; vel is %f\n", predPos[i][0], predPos[i][1], m_points[i].pos[0], m_points[i].pos[1], m_points[i].vel[1]);*/
-    }
+   }
 }
-
-
-

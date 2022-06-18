@@ -50,7 +50,7 @@ public:
 
     static MeshUPtr CreateBox();
     static MeshUPtr CreatePlane();
-    static MeshUPtr CreateSphere(float radius = 1.0f, uint32_t latiSegmentCount = 16, uint32_t longiSegmentCount = 32);
+    static MeshUPtr CreateSphere(float radius = 1.0f, uint32_t latiSegmentCount = 32, uint32_t longiSegmentCount = 64);
 
     [[nodiscard]] const VertexLayout *GetVertexLayout() const {
         return m_vertexLayout.get();
