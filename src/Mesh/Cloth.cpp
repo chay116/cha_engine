@@ -10,7 +10,7 @@ ClothUPtr Cloth::Create(uint32_t resX, uint32_t resY, float sizeX, float sizeY, 
     cloth->Init();
     return std::move(cloth);
 }
-#include <iostream>
+
 void Cloth::Init() {
     std::vector<uint32_t> indices;
     InitIndexArray(indices);
@@ -44,11 +44,11 @@ void Cloth::InitIndexArray(std::vector<uint32_t> &indices)
             //                |       |
             //               2|_______|3/6
             indices.push_back((GLuint)(j * m_resX + i));
-            indices.push_back((GLuint)((j + 1) * m_resX + i));//j*m_resX + i + 1
+            indices.push_back((GLuint)((j + 1) * m_resX + i));//j*m_latiSegmentCount + i + 1
             indices.push_back((GLuint)((j + 1) * m_resX + i + 1));
-            indices.push_back((GLuint)(j * m_resX + i + 1)); //(j + 1)*m_resX + i + 1)
-            indices.push_back((GLuint)(j * m_resX + i)); // (j + 1)*m_resX + i)
-            indices.push_back((GLuint)((j + 1) * m_resX + i + 1));//j*m_resX + i
+            indices.push_back((GLuint)(j * m_resX + i + 1)); //(j + 1)*m_latiSegmentCount + i + 1)
+            indices.push_back((GLuint)(j * m_resX + i)); // (j + 1)*m_latiSegmentCount + i)
+            indices.push_back((GLuint)((j + 1) * m_resX + i + 1));//j*m_latiSegmentCount + i
             countVer += 6;
         }
     }
@@ -101,12 +101,10 @@ void Cloth::InitVertexArray() {
                         continue;
                     int currX = i + x;
                     int currY = j + y;
-                    //if (i == 0 && j == 0) printf("currX: %d, currY: %d\n", currX, currY);
                     int currIndex = FindGridIndex(currX, currY);
                     int currOrigin = FindGridIndex(i, j);
                     if (IsInside(currX, currY) && currIndex > currOrigin)
                     {
-                        //if (i == 0 && j == 0) printf("adding\n");
                         m_distConstraintList.emplace_back(glm::vec2(currOrigin, currIndex));
                         if (x == y || x == -y)  // shear
                             m_restLength.push_back(shearRestLength);
@@ -141,7 +139,6 @@ void Cloth::Draw(const Program* program) const {
 
 void Cloth::Update(float deltaTime, float dampingRate, bool hasPosConstr, int solverIter, glm::vec3 sphereCenter, float sphereRadius)
 {
-     printf("updating... %f\n", deltaTime);
     // external forces (gravity ONLY)
     // --------------------------------
     glm::vec3 gravity = glm::vec3(0, -9.8f, 0);
@@ -172,7 +169,7 @@ void Cloth::Update(float deltaTime, float dampingRate, bool hasPosConstr, int so
             Point pt2 = m_points[currDistConstr[1]];
 
             glm::vec3 vecP2P1 = pt1.predPos - pt2.predPos;
-            float magP2P1 = mag(vecP2P1);
+            float magP2P1 = magr(vecP2P1);
             if (magP2P1 <= M_EPSION)
                 return;
             float invMass = pt1.invMass + pt2.invMass;
@@ -196,7 +193,7 @@ void Cloth::Update(float deltaTime, float dampingRate, bool hasPosConstr, int so
         for (int i = 0; i < m_points.size(); ++i)
         {
             glm::vec3 p2c = m_points[i].predPos - sphereCenter; // distance between current predpos to the center of the sphere
-            float dist = mag(p2c);
+            float dist = magr(p2c);
             // collision detection
             if (dist - sphereRadius < M_EPSION) // collide with the sphere
             {
@@ -207,7 +204,6 @@ void Cloth::Update(float deltaTime, float dampingRate, bool hasPosConstr, int so
     }
 
     // commit the velocity and the position changes
-    // ---------------------------------
     for (int i = 0; i < this->m_points.size(); ++i)
     {
         // commit velocity based on position changes

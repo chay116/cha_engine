@@ -7,14 +7,6 @@
 
 #include "Mesh.h"
 
-struct Point
-{
-    glm::vec3 pos; // position of the point
-    glm::vec3 predPos;  // predicted position stored here in update process
-    glm::vec3 vel; // velocity of the point
-    glm::vec3 accel; // acceleration of the point
-    float invMass;
-};
 
 CLASS_PTR(Cloth);
 class Cloth {
@@ -58,7 +50,5 @@ private:
     std::vector<float> m_restLength; // the rest lengths between each two m_points of the cloth
     std::vector<glm::vec3> m_posConstraintList;  // stores the position of position contraints
 };
-
-inline float mag(glm::vec3 &a) { return sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]); };
 
 #endif //CHA_ENGINE_CLOTH_H

@@ -9,6 +9,7 @@ OpenGL을 기반으로 하여 기본적인 그래픽 요소들을 구현해보�
 + IBL(Image Based Lighting)
   ![캡처](./assets/Readme/pbr_example.png)
 + Simple PBD(Collision between sphere and cloth)
++ ![Alt Text](./assets/Readme/cloth_sphere.gif)
 
 구현해보았지만 코드 상으로 아직 깔끔하지 않아 포함하지 않은 요소들도 포함되어 있습니다.
 
@@ -22,6 +23,7 @@ OpenGL을 기반으로 하여 기본적인 그래픽 요소들을 구현해보�
 
 + 3D 물리 충돌 시뮬레이션
 + Fluid Simulation(SPH, Grid Based)
++ Soft Body(PBD)
 
 # Third-party libraries
 -----------

@@ -10,7 +10,7 @@ int maxSubstep = 10;
 float FPS = 24.0f;
 float timeStep = 1.0f / (FPS*maxSubstep); //1.0/240f;
 int solverIteration = 10;
-float dampingRate = 0.9f;
+float dampingRate = 0.4f;
 
 ContextUPtr Context::Create() {
     auto context = ContextUPtr(new Context());
@@ -78,35 +78,35 @@ void Context::Reshape(int width, int height) {
 
 void Context::Render() {
     if (ImGui::Begin("ui window")) {
-        ImGui::DragFloat3("camera pos", glm::value_ptr(m_cameraPos), 0.01f);
-        ImGui::DragFloat("camera yaw", &m_cameraYaw, 0.5f);
-        ImGui::DragFloat("camera pitch", &m_cameraPitch, 0.5f, -89.0f, 89.0f);
-        ImGui::Separator();
-        if (ImGui::Button("reset camera")) {
-            m_cameraYaw = 0.0f;
-            m_cameraPitch = 0.0f;
-            m_cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-        }
-        if (ImGui::CollapsingHeader("lights")) {
-            static int lightIndex = 0;
-            ImGui::DragInt("light.index", &lightIndex, 1.0f, 0, (int)m_lights.size() - 1);
-            ImGui::DragFloat3("light.pos", glm::value_ptr(m_lights[lightIndex].position), 0.01f);
-            ImGui::DragFloat3("light.color", glm::value_ptr(m_lights[lightIndex].color), 0.1f);
-        }
-        if (ImGui::CollapsingHeader("sphere")) {
-            ImGui::ColorEdit3("sphere.albedo", glm::value_ptr(m_sphereMaterial.albedo));
-            ImGui::SliderFloat("sphere.roughness", &m_sphereMaterial.roughness, 0.0f, 1.0f);
-            ImGui::SliderFloat("sphere.metallic", &m_sphereMaterial.metallic, 0.0f, 1.0f);
-            ImGui::SliderFloat("sphere.ao", &m_sphereMaterial.ao, 0.0f, 1.0f);
-            ImGui::Checkbox("use IBL", &m_sphereMaterial.useIBL);
-        }
-        if (ImGui::CollapsingHeader("cloth")) {
-            ImGui::ColorEdit3("cloth.albedo", glm::value_ptr(m_clothMaterial.albedo));
-            ImGui::SliderFloat("cloth.roughness", &m_clothMaterial.roughness, 0.0f, 1.0f);
-            ImGui::SliderFloat("cloth.metallic", &m_clothMaterial.metallic, 0.0f, 1.0f);
-            ImGui::SliderFloat("cloth.ao", &m_clothMaterial.ao, 0.0f, 1.0f);
-        }
+    ImGui::DragFloat3("camera pos", glm::value_ptr(m_cameraPos), 0.01f);
+    ImGui::DragFloat("camera yaw", &m_cameraYaw, 0.5f);
+    ImGui::DragFloat("camera pitch", &m_cameraPitch, 0.5f, -89.0f, 89.0f);
+    ImGui::Separator();
+    if (ImGui::Button("reset camera")) {
+        m_cameraYaw = 0.0f;
+        m_cameraPitch = 0.0f;
+        m_cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
     }
+    if (ImGui::CollapsingHeader("lights")) {
+        static int lightIndex = 0;
+        ImGui::DragInt("light.index", &lightIndex, 1.0f, 0, (int)m_lights.size() - 1);
+        ImGui::DragFloat3("light.pos", glm::value_ptr(m_lights[lightIndex].position), 0.01f);
+        ImGui::DragFloat3("light.color", glm::value_ptr(m_lights[lightIndex].color), 0.1f);
+    }
+    if (ImGui::CollapsingHeader("sphere")) {
+        ImGui::ColorEdit3("sphere.albedo", glm::value_ptr(m_sphereMaterial.albedo));
+        ImGui::SliderFloat("sphere.roughness", &m_sphereMaterial.roughness, 0.0f, 1.0f);
+        ImGui::SliderFloat("sphere.metallic", &m_sphereMaterial.metallic, 0.0f, 1.0f);
+        ImGui::SliderFloat("sphere.ao", &m_sphereMaterial.ao, 0.0f, 1.0f);
+        ImGui::Checkbox("use IBL", &m_sphereMaterial.useIBL);
+    }
+    if (ImGui::CollapsingHeader("cloth")) {
+        ImGui::ColorEdit3("cloth.albedo", glm::value_ptr(m_clothMaterial.albedo));
+        ImGui::SliderFloat("cloth.roughness", &m_clothMaterial.roughness, 0.0f, 1.0f);
+        ImGui::SliderFloat("cloth.metallic", &m_clothMaterial.metallic, 0.0f, 1.0f);
+        ImGui::SliderFloat("cloth.ao", &m_clothMaterial.ao, 0.0f, 1.0f);
+    }
+}
     ImGui::End();
 
     m_cameraFront =
